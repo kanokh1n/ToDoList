@@ -1,0 +1,6 @@
+services:
+  todolist:
+    build: .
+    container_name: app-container
+    ports:
+      - 8080:8080
