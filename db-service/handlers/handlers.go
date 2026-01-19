@@ -25,8 +25,6 @@ func CreateTaskHandler(repo *repository.TaskRepository) http.HandlerFunc {
 			return
 		}
 
-		json.NewEncoder(w).Encode(map[string]string{"Task": task.Title})
-
 		if err := repo.Create(&task); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
@@ -34,7 +32,6 @@ func CreateTaskHandler(repo *repository.TaskRepository) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusCreated)
-
 	}
 }
 
