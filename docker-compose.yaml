@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: todolist-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - todolist-network
+
+  db-service:
+    build:
+      context: ./db-service
+      dockerfile: Dockerfile
+    container_name: todolist-db-service
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+      SERVICE_PORT: 8081
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+    networks:
+      - todolist-network
+    restart: unless-stopped
+
+  api-service:
+    build:
+      context: ./api-service
+      dockerfile: Dockerfile
+    container_name: todolist-api-service
+    environment:
+      DB_SERVICE_URL: http://db-service:8081
+      SERVICE_PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db-service
+    networks:
+      - todolist-network
+    restart: unless-stopped
+
+networks:
+  todolist-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
