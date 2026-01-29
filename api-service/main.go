@@ -19,9 +19,9 @@ func main() {
 
 	router.HandleFunc("/tasks", handlers.CreateTaskHandler).Methods("POST")
 	router.HandleFunc("/tasks", handlers.GetAllTasksHandler).Methods("GET")
-	router.HandleFunc("/tasks/{title}", handlers.GetTaskByTitleHandler).Methods("GET")
-	router.HandleFunc("/tasks/{title}", handlers.DeleteTaskHandler).Methods("DELETE")
-	router.HandleFunc("/tasks/{title}/complete", handlers.CompleteTaskHandler).Methods("PATCH")
+	router.HandleFunc("/tasks/{id}", handlers.GetTaskByIdHandler).Methods("GET")
+	router.HandleFunc("/tasks/{id}", handlers.DeleteTaskHandler).Methods("DELETE")
+	router.HandleFunc("/tasks/{id}/complete", handlers.CompleteTaskHandler).Methods("PATCH")
 
 	log.Println("API service running on port " + os.Getenv("SERVICE_PORT"))
 	if err := http.ListenAndServe(":"+os.Getenv("SERVICE_PORT"), router); err != nil {

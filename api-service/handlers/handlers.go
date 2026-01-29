@@ -56,18 +56,18 @@ func GetAllTasksHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(respBody)
 }
 
-func GetTaskByTitleHandler(w http.ResponseWriter, r *http.Request) {
+func GetTaskByIdHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	title := vars["title"]
+	taskId := vars["id"]
 
-	if title == "" {
+	if taskId == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	encodedTitle := url.PathEscape(title)
+	encodedId := url.PathEscape(taskId)
 
-	resp, err := http.Get(DBServiceURL + "/tasks/" + encodedTitle)
+	resp, err := http.Get(DBServiceURL + "/tasks/" + encodedId)
 	if err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		return
@@ -87,16 +87,16 @@ func GetTaskByTitleHandler(w http.ResponseWriter, r *http.Request) {
 
 func DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	title := vars["title"]
+	taskId := vars["id"]
 
-	if title == "" {
+	if taskId == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	encodedTitle := url.PathEscape(title)
+	encodedId := url.PathEscape(taskId)
 
-	req, err := http.NewRequest("DELETE", DBServiceURL+"/tasks/"+encodedTitle, nil)
+	req, err := http.NewRequest("DELETE", DBServiceURL+"/tasks/"+encodedId, nil)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -122,16 +122,16 @@ func DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 func CompleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	title := vars["title"]
+	taskId := vars["id"]
 
-	if title == "" {
+	if taskId == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	encodedTitle := url.PathEscape(title)
+	encodedId := url.PathEscape(taskId)
 
-	req, err := http.NewRequest("PATCH", DBServiceURL+"/tasks/"+encodedTitle+"/complete", nil)
+	req, err := http.NewRequest("PATCH", DBServiceURL+"/tasks/"+encodedId+"/complete", nil)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

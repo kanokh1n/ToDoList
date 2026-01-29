@@ -1,12 +1,8 @@
 package validation
 
-func ValidateTaskTitle(title string) error {
-	if title == "" {
-		return ErrTitleRequired
-	}
-
-	if len(title) > 255 {
-		return ErrTitleTooLong
+func ValidateTaskId(id int) error {
+	if id == 0 {
+		return ErrIdRequired
 	}
 
 	return nil

@@ -14,10 +14,11 @@ help:
 	@echo "  make test          - Тест API"
 	@echo "  make migrate-up    - Накатить миграции"
 	@echo "  make migrate-down  - Откатить миграции"
+	@echo "  make redis-cli     - Подключиться к Redis CLI"
 	@echo ""
 
 build:
-	docker-compose build
+	sudo docker-compose build
 
 up:
 	docker-compose up -d
@@ -36,6 +37,9 @@ logs-db:
 
 logs-postgres:
 	docker-compose logs -f postgres
+
+logs-redis:
+	docker-compose logs -f redis
 
 restart:
 	docker-compose restart
@@ -58,7 +62,10 @@ clean:
 	docker-compose down -v
 
 psql:
-	docker exec -it checklist-postgres psql -U checklist_user -d checklist_db
+	docker exec -it todolist-postgres psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
+
+redis-cli:
+	docker exec -it todolist-redis redis-cli -a $(REDIS_PASSWORD)
 
 shell-api:
 	docker exec -it checklist-api-service sh
@@ -68,8 +75,8 @@ shell-db:
 
 migrate-up:
 	docker exec -it todolist-db-service migrate -path=/app/migrations \
-		-database "postgres://postgres:277353@postgres:5432/postgres?sslmode=disable" up
+		-database "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):5432/$(POSTGRES_DB)?sslmode=disable" up
 
 migrate-down:
 	docker exec -it todolist-db-service migrate -path=/app/migrations \
-		-database "postgres://postgres:277353@postgres:5432/postgres?sslmode=disable" down
+		-database "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):5432/$(POSTGRES_DB)?sslmode=disable" down

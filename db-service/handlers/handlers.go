@@ -6,12 +6,14 @@ import (
 	"db-service/validation"
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
 
 func CreateTaskHandler(repo *repository.TaskRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		var task models.Task
 
 		if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
@@ -20,12 +22,7 @@ func CreateTaskHandler(repo *repository.TaskRepository) http.HandlerFunc {
 			return
 		}
 
-		if err := validation.ValidateTaskTitle(task.Title); err != nil {
-			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
-			return
-		}
-
-		if err := repo.Create(&task); err != nil {
+		if err := repo.Create(ctx, &task); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 			return
@@ -37,7 +34,8 @@ func CreateTaskHandler(repo *repository.TaskRepository) http.HandlerFunc {
 
 func GetAllTasksHandler(repo *repository.TaskRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		tasks, err := repo.GetAllTasks()
+		ctx := r.Context()
+		tasks, err := repo.GetAllTasks(ctx)
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -52,16 +50,22 @@ func GetAllTasksHandler(repo *repository.TaskRepository) http.HandlerFunc {
 
 func DeleteTaskHandler(repo *repository.TaskRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		vars := mux.Vars(r)
-		title := vars["title"]
+		taskId, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Invalid ID"})
+			return
+		}
 
-		if err := validation.ValidateTaskTitle(title); err != nil {
+		if err := validation.ValidateTaskId(taskId); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 			return
 		}
 
-		if err := repo.DeleteTask(title); err != nil {
+		if err := repo.DeleteTask(ctx, taskId); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Failed to delete task"})
 			return
@@ -73,18 +77,24 @@ func DeleteTaskHandler(repo *repository.TaskRepository) http.HandlerFunc {
 
 func CompleteTaskHandler(repo *repository.TaskRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		vars := mux.Vars(r)
-		title := vars["title"]
+		taskId, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Invalid ID"})
+			return
+		}
 
-		if err := validation.ValidateTaskTitle(title); err != nil {
+		if err := validation.ValidateTaskId(taskId); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 			return
 		}
 
-		if err := repo.CompleteTask(title); err != nil {
+		if err := repo.CompleteTask(ctx, taskId); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{"error": "Failed to delete task"})
+			json.NewEncoder(w).Encode(map[string]string{"error": "Failed to complete task"})
 			return
 		}
 
@@ -92,25 +102,32 @@ func CompleteTaskHandler(repo *repository.TaskRepository) http.HandlerFunc {
 	}
 }
 
-func GetTaskByTitleHandler(repo *repository.TaskRepository) http.HandlerFunc {
+func GetTaskByIdHandler(repo *repository.TaskRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		vars := mux.Vars(r)
-		title := vars["title"]
+		taskId, err := strconv.Atoi(vars["id"])
 
-		if err := validation.ValidateTaskTitle(title); err != nil {
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Invalid ID"})
+			return
+		}
+
+		if err := validation.ValidateTaskId(taskId); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 			return
 		}
 
-		tasks, err := repo.GetTaskByTitle(title)
+		task, err := repo.GetTaskById(ctx, taskId)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{"error": "Failed to get task by title"})
+			json.NewEncoder(w).Encode(map[string]string{"error": "Failed to get task by id"})
 			return
 		}
 
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(tasks)
+		json.NewEncoder(w).Encode(task)
 	}
 }
